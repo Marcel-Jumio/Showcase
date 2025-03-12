@@ -1,0 +1,56 @@
+{
+  "userReference": "USR-12345",
+  "customerInternalReference": "CUST-67890",
+  "reportingCriteria": "VIP Customer",
+  "overrideSettings": {
+    "explicitUploadEnabled": "true",
+    "forceCrossDevice": "false"
+  },
+  "workflowDefinition": {
+    "key": "10166",
+    "credentials": [
+      {
+        "category": "DOCUMENT",
+        "label": "Primary ID",
+        "country": {
+          "predefinedType": "DEFINED",
+          "values": ["USA"]
+        },
+        "type": {
+          "predefinedType": "DEFINED",
+          "values": ["ID_CARD"]
+        }
+      }
+    ],
+    "capabilities": {
+      "watchlistScreening": {
+        "searchType": "one"
+      }
+      },
+      "workflowDecision": {
+        "decisionLabelRulesetId": "LABEL-789",
+        "riskScoreRulesetId": "RISK-101"
+      },
+      "ekycCheck": {
+        "searchType": "one"
+      }
+    },
+  "userConsent": {
+    "userIp": "192.168.1.1",
+    "userLocation": {
+      "country": "USA",
+      "state": "CA"
+    },
+    "consent": {
+      "obtained": "yes",
+      "obtainedAt": "2022-07-20T17:20:35.000Z"
+    }
+  },
+  "callbackUrl": "https://example.com/callback",
+  "tokenLifetime": "30m",
+  "web": {
+    "successUrl": "https://example.com/success",
+    "errorUrl": "https://example.com/error",
+    "locale": "en-US"
+  }
+}

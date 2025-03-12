@@ -1,0 +1,21 @@
+# -- Python --
+__pycache__/
+*.py[cod]
+venv/
+.env  # if you store sensitive environment variables here
+
+# -- Node/React --
+node_modules/
+build/
+dist/
+
+# -- Logs --
+*.log
+
+# -- Editor/IDE Settings --
+.vscode/
+.idea/
+
+# -- OS-specific --
+.DS_Store
+Thumbs.db
