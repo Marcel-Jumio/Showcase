@@ -1,12 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 import json
 import requests  # To make HTTP requests
 from dotenv import load_dotenv
+import csv
 import os
+import io
 import config
 import time
 import logging
+import sqlite3
 
 
 # 🔹 Configure logging
@@ -30,6 +33,39 @@ CORS(app)
 
 access_token = None
 token_expiration_time = None
+
+# function that queried my database rules.db
+def get_rules():
+    import os, sqlite3
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(base_dir, "rules.db")
+    print("Using database at:", db_path)  # Debug: print the full database path
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM rules")
+    rules = cursor.fetchall()
+    conn.close()
+    return rules
+
+# function that gets rules by ids
+def get_rules_by_ids(rule_ids):
+    # Build the absolute path to your database file
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(base_dir, "rules.db")
+    
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Create a parameterized query that uses placeholders for rule_ids
+    query = "SELECT * FROM rules WHERE id IN ({seq})".format(
+        seq=','.join(['?'] * len(rule_ids))
+    )
+    cursor.execute(query, rule_ids)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
 
 # Function that retrieves the access token
 def get_access_token():
@@ -159,6 +195,73 @@ def prepare_data_for_retrieval(data):
     return prepared_data
 
 
+@app.route('/rules', methods=['GET'])
+def get_all_rules():
+    try:
+        # Call the helper function to query all rules
+        rules = get_rules()
+        
+        # Convert each sqlite3.Row object into a plain dictionary
+        rules_list = [dict(row) for row in rules]
+        
+        # Return the list as JSON with a 200 OK status
+        return jsonify(rules_list), 200
+    except Exception as e:
+        # Return an error message and a 500 status code in case of issues
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/export-csv', methods=['POST'])
+def export_csv():
+    try:
+        # Retrieve JSON payload from the request
+        data = request.get_json()
+        if not data or "rules" not in data:
+            return jsonify({"error": "No rule_ids provided"}), 400
+
+        rules_payload = data["rules"]
+        if not isinstance(rules_payload, list):
+            return jsonify({"error": "rule_ids must be a list"}), 400
+        
+        # Extract IDs and build a mapping of updated scores
+        rule_ids = [item["id"] for item in rules_payload]
+        updated_scores = {item["id"]: item["score"] for item in rules_payload}
+
+        # Query the database to get the rules for the provided IDs
+        rows = get_rules_by_ids(rule_ids)
+
+        # Create an in-memory string buffer to hold the CSV data
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Write the header row - ensure it exactly matches your required CSV structure
+        header = ["RULE_CATEGORY", "RULE_DESCRIPTION", "RULE_LABELS", "RULE_LEFT_HAND_SIDE", "RULE_NAME", "SCORE"]
+        writer.writerow(header)
+
+        # Write each row into the CSV in the order specified by the header
+        for row in rows:
+            new_score = updated_scores.get(row["id"], row["score"])
+            writer.writerow([
+                row["rule_category"],
+                row["rule_description"],
+                row["rule_labels"],
+                row["rule_lhs"],
+                row["rule_name"],
+                new_score
+            ])
+
+        # Retrieve the CSV content from the in-memory file
+        csv_content = output.getvalue()
+        output.close()
+
+        # Create a response with the CSV content and set headers to force download
+        response = make_response(csv_content)
+        response.headers["Content-Disposition"] = "attachment; filename=exported_rules.csv"
+        response.headers["Content-Type"] = "text/csv"
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500    
 
     
 @app.route('/get-access-token', methods=['GET'])

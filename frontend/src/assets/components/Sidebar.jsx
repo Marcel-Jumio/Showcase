@@ -44,8 +44,8 @@ export default function Sidebar() {
             <ListItem button component={Link} to="/Rules">
               <ListItemText primary="Rules" />
             </ListItem>
-            <ListItem button component={Link} to="/Settings">
-              <ListItemText primary="Settings" />
+            <ListItem button component={Link} to="/Websdk">
+              <ListItemText primary="WEB SDK" />
             </ListItem>
           </List>
         )}

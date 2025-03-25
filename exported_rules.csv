@@ -1,0 +1,4 @@
+RULE_CATEGORY,RULE_DESCRIPTION,RULE_LABELS,RULE_LEFT_HAND_SIDE,RULE_NAME,SCORE
+ID Verification,,usability,"($usabilityList: usabilityList != null) (Usability($labels: labels contains ""ID"", decisionType == ""WARNING"") from $usabilityList)",ID Usability WARNING,50
+ID Verification,,usability,"($usabilityList: usabilityList != null) (Usability($labels: labels contains ""ID"", decisionType == ""REJECTED"") from $usabilityList)",ID Usability REJECTED,100
+ID Verification,,usability,"($usabilityList: usabilityList != null) (Usability($labels: labels contains ""ID"", decisionType == ""NOT_EXECUTED"") from $usabilityList)",ID Usability NOT EXECUTED,100
